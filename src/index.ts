@@ -251,9 +251,17 @@ XencelabsQuickKeysManagerInstance.on('connect', async (qkDevice) => {
 	    shift = 0;
 
 	    console.log("OUTPUT="+output)
+	    if (typeof(conf.buttons[keyIndex][commID+'_flash']) !== 'undefined') {
+              await qkDevice.showOverlayText(1, conf.buttons[keyIndex][commID+'_flash']);
+	      return;
+	    }
+
             // --| If overlay text is not set, return
-            if (conf.buttons[keyIndex].press_overlay.text == "") { return; }
+//            if (typeof conf.buttons[keyIndex].press_overlay == 'undefined' ||
+//                typeof conf.buttons[keyIndex].press_overlay.text == 'undefined' ||
+//                conf.buttons[keyIndex].press_overlay.text == "") { return; }
             let overlay_text = conf.buttons[keyIndex].press_overlay.text;
+    console.log(overlay_text)
 
             if (overlay_text.includes("%output%") && output != "") {
                 let tmpOutput = "";
@@ -373,4 +381,5 @@ XencelabsQuickKeysManagerInstance.scanDevices()
 
 // --| If device not found ----------------------
 checkDevice()
+
 // vim: ts=2 sw=2 et
