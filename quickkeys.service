@@ -1,0 +1,10 @@
+[Unit]
+Description=[Quickkeys]
+
+[Service]
+Type=simple
+StandardOutput=journal
+ExecStart=~/gits/quick-keys-app/run.sh
+
+[Install]
+WantedBy=default.target
