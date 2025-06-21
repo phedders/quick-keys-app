@@ -184,8 +184,8 @@ XencelabsQuickKeysManagerInstance.on('connect', async (qkDevice) => {
 	    }
 
 	    // We will look for "command" or if there are other keys held... command_key_key...
-		// special suffix "_x" will cause keys to be cleared after use so a button
-		// can be used to chord *and* have a single press use.
+	    // special suffix "_x" will cause keys to be cleared after use so a button
+	    // can be used to chord *and* have a single press use.
 	    var commID = currentKeys.length > 0 ? `command_${currentKeys.sort().join("_")}` : "command"
 	    if ( shift > 0 ) {
 	      var commID = commID + "_s" + shift
@@ -212,8 +212,8 @@ XencelabsQuickKeysManagerInstance.on('connect', async (qkDevice) => {
 		    clearKeys=currentKeys;
 	    }
 
-	    console.log(`cmd search ${commID} ${cmd}`)
-	    console.log(conf.buttons[keyIndex])
+	    console.log(`commID=${commID} cmd search :: ${cmd}`)
+	    //console.log(conf.buttons[keyIndex])
 
             // --| If command is not set, return
             if (cmd == "") { return; }
@@ -250,6 +250,7 @@ XencelabsQuickKeysManagerInstance.on('connect', async (qkDevice) => {
 
 	    shift = 0;
 
+	    console.log("OUTPUT="+output)
             // --| If overlay text is not set, return
             if (conf.buttons[keyIndex].press_overlay.text == "") { return; }
             let overlay_text = conf.buttons[keyIndex].press_overlay.text;
@@ -354,7 +355,10 @@ XencelabsQuickKeysManagerInstance.on('disconnect', async (qkDevice) => {
     let system_notify = `${notify_path} 'QuickKeys' 'QuickKeys Disconnected'`;
     await commands.runCommand(system_notify);
     console.log('disconnected %s', qkDevice.deviceId)
-    exit(0)
+    console.log(`Going nasty to kill myself... pid ${process.pid}`);
+    commands.runCommand(`kill -9 ${process.pid}`);
+    process.exit(); // Doesnt work
+    exit(0) // Doesnt work
 })
 
 // --| Log detected connection errors -----------
@@ -369,3 +373,4 @@ XencelabsQuickKeysManagerInstance.scanDevices()
 
 // --| If device not found ----------------------
 checkDevice()
+// vim: ts=2 sw=2 et
