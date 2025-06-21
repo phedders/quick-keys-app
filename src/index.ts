@@ -24,6 +24,9 @@ let wheelSpeed: XencelabsQuickKeysWheelSpeed;
 let currentKeys: number[] = []
 let clearKeys: number[] = []
 
+let shift: number = 0;
+let shiftTime: number = 0;
+let shiftTimeOut: number = 2000;
 
 // --| Sleep for duration -----------------------
 function sleep(time: number | undefined) {
@@ -127,6 +130,11 @@ XencelabsQuickKeysManagerInstance.on('connect', async (qkDevice) => {
     // notification.setDevice(device);
     notification.startWatcher(conf.settings.notification_path, qkDevice);
 
+    // Overwrite some defaults
+    if ( typeof(conf.settings.shift_time_out) !== 'undefined' ) {
+      shiftTimeOut = conf.settings.shift_time_out;
+      console.log("CONF Set shiftTimeOut="+shiftTimeOut)
+    }
     // --| Check battery status ------------
     qkDevice.on('battery', async (battery) => {
         batteryLevel = battery.valueOf();
@@ -151,6 +159,7 @@ XencelabsQuickKeysManagerInstance.on('connect', async (qkDevice) => {
 
     // --| Perform button down action ------
     qkDevice.on('down', (keyIndex) => { 
+	    keyTime = new Date().getTime()
 	    currentKeys.push(keyIndex)
 	    console.log(`Key down:${keyIndex} Chord:${currentKeys}`);
 	    return;
@@ -165,10 +174,17 @@ XencelabsQuickKeysManagerInstance.on('connect', async (qkDevice) => {
 	}
 	console.log(`Key up:${keyIndex} Chord:${currentKeys}`);
         try {
+	    // Check the Shift timeout before we rely on shift value
+	    if ( ( shiftTime + shiftTimeOut ) < new Date().getTime() ) {
+		    shift = 0
+		    console.log("Shift reset")
 	    // We will look for "command" or if there are other keys held... command_key_key...
 		// special suffix "_x" will cause keys to be cleared after use so a button
 		// can be used to chord *and* have a single press use.
 	    var commID = currentKeys.length > 0 ? `command_${currentKeys.sort().join("_")}` : "command"
+	    if ( shift > 0 ) {
+	      var commID = commID + "_s" + shift
+	    }
 
 	    // Process command prefix controls then runCommand
 	    // Prefix "CLEAR::" will cause the chord keys to be cleared on next "UP"
@@ -191,6 +207,18 @@ XencelabsQuickKeysManagerInstance.on('connect', async (qkDevice) => {
                 return;
             }
 
+            if (cmd == "shift") {
+              if (shift == 0) {	
+		shift = keyIndex * 10 + 1
+	      } else {
+	        shift += 1
+	      }
+	      shiftTime = new Date().getTime()
+	      console.log("GET SHIFTY" + shift + " " + shiftTime)
+              await qkDevice.showOverlayText(1, "Shift"+shift);
+              return;
+	    }
+
 	    if (cmd.match(/^config=/)) {
                 var cf = cmd.replace(/^config=/,"")
                 conf = await config.readConfig({configPath:cf});
@@ -202,6 +230,8 @@ XencelabsQuickKeysManagerInstance.on('connect', async (qkDevice) => {
             if (output != "") {
                 output = output.toString();
             }
+
+	    shift = 0;
 
             // --| If overlay text is not set, return
             if (conf.buttons[keyIndex].press_overlay.text == "") { return; }
