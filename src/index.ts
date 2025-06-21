@@ -27,6 +27,7 @@ let clearKeys: number[] = []
 let shift: number = 0;
 let shiftTime: number = 0;
 let shiftTimeOut: number = 2000;
+let keyTime: number = 0;
 
 // --| Sleep for duration -----------------------
 function sleep(time: number | undefined) {
@@ -135,6 +136,7 @@ XencelabsQuickKeysManagerInstance.on('connect', async (qkDevice) => {
       shiftTimeOut = conf.settings.shift_time_out;
       console.log("CONF Set shiftTimeOut="+shiftTimeOut)
     }
+
     // --| Check battery status ------------
     qkDevice.on('battery', async (battery) => {
         batteryLevel = battery.valueOf();
@@ -167,6 +169,7 @@ XencelabsQuickKeysManagerInstance.on('connect', async (qkDevice) => {
 
     // --| Perform button up action --------
     qkDevice.on('up', async (keyIndex) => {
+	var delay = Math.floor((new Date().getTime() - keyTime)/1000)
 	currentKeys = currentKeys.filter(x=> x != keyIndex);
 	if (clearKeys.find(x=> x==keyIndex)) {
 	  clearKeys = clearKeys.filter(x=> x!= keyIndex);
@@ -178,6 +181,8 @@ XencelabsQuickKeysManagerInstance.on('connect', async (qkDevice) => {
 	    if ( ( shiftTime + shiftTimeOut ) < new Date().getTime() ) {
 		    shift = 0
 		    console.log("Shift reset")
+	    }
+
 	    // We will look for "command" or if there are other keys held... command_key_key...
 		// special suffix "_x" will cause keys to be cleared after use so a button
 		// can be used to chord *and* have a single press use.
@@ -185,11 +190,23 @@ XencelabsQuickKeysManagerInstance.on('connect', async (qkDevice) => {
 	    if ( shift > 0 ) {
 	      var commID = commID + "_s" + shift
 	    }
+	    console.log("commID = " + commID + " Delay="+delay)
 
 	    // Process command prefix controls then runCommand
 	    // Prefix "CLEAR::" will cause the chord keys to be cleared on next "UP"
 	    // so that a button can be used for single press as well as part of chord
-            let cmd = conf.buttons[keyIndex][commID];
+	    // First we will check if there are any _dX available
+
+	    let cmd = ""
+	    if (typeof conf.buttons[keyIndex][commID+"_d"+delay] !== 'undefined') {
+              commID = commID+"_d"+delay;
+	    } else if (delay>0 && typeof conf.buttons[keyIndex][commID+"_d"+(delay+1)] !== 'undefined') {
+              commID = commID+"_d"+(delay+1);
+	    } else if (delay>1 && typeof conf.buttons[keyIndex][commID+"_d"+(delay-1)] !== 'undefined') {
+              commID = commID+"_d"+(delay-1);
+	    }
+            cmd = conf.buttons[keyIndex][commID];
+
 	    if (cmd.match(/^CLEAR::/)) {
 		    cmd=cmd.replace(/^CLEAR::/,"");
 		    clearKeys=currentKeys;
