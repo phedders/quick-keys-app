@@ -60,7 +60,7 @@ And you can make any button a shift, eg _s11 would be key1 shifted once.
 
 This works by giving the command "shift". Each time you press that key within the shift timeout, the shift *for that key* increases.
 
-Then you can use a modifier for other actions "\_s<K><S>" where Key is the key and S is the number of shifts applied. In the above example pressing once sets 1 shift level. Pressing it again kits _s81 and then applies another shift level (2).. same for _s82 which will set shift level 3. On _s83 I load a new config (my master config select)
+Then you can use a modifier for other actions '_s\<K\>\<S\>' where Key is the key and S is the number of shifts applied. In the above example pressing once sets 1 shift level. Pressing it again kits _s81 and then applies another shift level (2).. same for _s82 which will set shift level 3. On _s83 I load a new config (my master config select)
 
 Obviously you can apply the current shift to any key
 
